@@ -10,6 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import javax.swing.Timer;
 
@@ -22,11 +23,22 @@ public class VentanaJuego extends javax.swing.JFrame {
     static int ANCHOPANTALLA = 600;
     static int ALTOPANTALLA = 450;
     
+    //numero de marcianos que van a aparecer.
+    int filas = 3;
+    int columnas = 6;
+    int contador = 0;
+    
     BufferedImage buffer = null;
     
     Nave miNave = new Nave();
     Disparo miDisparo = new Disparo();
-    Marciano miMarciano = new Marciano();
+    //Marciano miMarciano = new Marciano();
+    Marciano [][] listaMarcianos = new Marciano [filas] [columnas]; 
+    boolean direccionMarcianos = false;
+    
+    //inicializo el array de murcianos
+    
+  
     
     Timer temporizador = new Timer(10, new ActionListener() {
         @Override
@@ -48,12 +60,24 @@ public class VentanaJuego extends javax.swing.JFrame {
         //inicializo la posición inicial de la nave
         miNave.x = ANCHOPANTALLA /2 - miNave.imagen.getWidth(this) / 2;
         miNave.y = ALTOPANTALLA - miNave.imagen.getHeight(this)  - 40; 
+        
+        //inicializo el array de marcianos
+        
+          for(int i=0; i<filas; i++){
+        for(int j=0; j<columnas; j++){
+            listaMarcianos[i][j] = new Marciano();
+            listaMarcianos[i][j].x = j*(15 + listaMarcianos[i][j].imagen1.getWidth(null));
+            listaMarcianos[i][j].setY(i*(10 + listaMarcianos[i][j].imagen1.getHeight(null)));
+            
+        }
+}
+        
     }
     
     private void bucleDelJuego(){
         //se encarga del redibujado de los objetos en el jPanel1
         //primero borro todo lo que hay en el buffer
-        
+        contador++;
         Graphics2D g2 = (Graphics2D) buffer.getGraphics();
         g2.setColor(Color.BLACK);
         g2.fillRect(0, 0, ANCHOPANTALLA, ALTOPANTALLA);
@@ -62,10 +86,11 @@ public class VentanaJuego extends javax.swing.JFrame {
         //redibujaremos aquí cada elemento
         g2.drawImage(miDisparo.imagen, miDisparo.x, miDisparo.y, null);
         g2.drawImage(miNave.imagen, miNave.x, miNave.y, null);
-        g2.drawImage(miMarciano.imagen1, miMarciano.x, miMarciano.y, null);
+        
+        pintaMarcianos(g2);
+        chequeaImpacto();
         miNave.mueve();
         miDisparo.mueve();
-        miMarciano.mueve();
         /////////////////////////////////////////////////////////////
         //*****************   fase final, se dibuja ***************//
         //*****************   el buffer de golpe sobre el Jpanel***//
@@ -75,6 +100,74 @@ public class VentanaJuego extends javax.swing.JFrame {
         
     }
     
+    private void chequeaImpacto(){
+        int alto = miDisparo.imagen.getHeight(null);
+        int ancho = miDisparo.imagen.getWidth(null);
+        
+        Rectangle2D.Double rectanguloMarciano = new Rectangle2D.Double();
+        Rectangle2D.Double rectanguloDisparo = new Rectangle2D.Double();
+        
+        rectanguloDisparo.setFrame(miDisparo.x,
+                                   miDisparo.y,
+                                   alto,
+                                   ancho);
+         for(int i=0; i<filas; i++){
+            for(int j=0; j<columnas; j++){
+               if(listaMarcianos[i][j].vivo){  
+                    rectanguloMarciano.setFrame(listaMarcianos[i][j].x, listaMarcianos[i][j].getY(),
+                                                listaMarcianos[i][j].imagen1.getHeight(null),
+                                                listaMarcianos[i][j].imagen1.getWidth(null)
+                                                );
+                    if(rectanguloDisparo.intersects(rectanguloMarciano)){
+                        listaMarcianos[i][j].vivo = false;
+                        miDisparo.posicionaDisparo(miNave);
+                        miDisparo.y = 1000;
+                        miDisparo.disparado = false;
+                    }
+
+                }
+            }
+         }
+    }
+    
+    private void cambiaDireccion(){
+         for(int i=0; i<filas; i++){
+            for(int j=0; j<columnas; j++){
+                listaMarcianos[i][j].setY(listaMarcianos[i][j].getY() + listaMarcianos[0][0].imagen1.getHeight(null));
+                listaMarcianos[i][j].setvX(listaMarcianos[i][j].getvX() * -1);
+                
+            }
+            }
+    }
+    private void pintaMarcianos(Graphics2D _g2){
+        int anchoMarciano = listaMarcianos[0][0].imagen1.getWidth(null);
+        for(int i=0; i<filas; i++){
+            for(int j=0; j<columnas; j++){
+                if(listaMarcianos[i][j].vivo){               
+                    listaMarcianos[i][j].mueve();
+                    //chequeo si el marciano ha chocado contra la pared para cambiar la direccion
+                    if(listaMarcianos[i][j].x + anchoMarciano == ANCHOPANTALLA || (listaMarcianos[i][j].x == 0)){
+                        direccionMarcianos = true;
+                    }
+
+                    if(contador < 50){
+                        _g2.drawImage(listaMarcianos[i][j].imagen1,
+                                      listaMarcianos[i][j].x, listaMarcianos[i][j].getY(),
+                                      null);
+                    }else if (contador < 100){
+                        _g2.drawImage(listaMarcianos[i][j].imagen2,
+                                      listaMarcianos[i][j].x, listaMarcianos[i][j].getY(),
+                                      null);
+                    }
+                    else contador = 0;
+            }
+            }
+        }
+        if(direccionMarcianos){
+            cambiaDireccion();
+            direccionMarcianos = false;
+        }
+    }
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -88,6 +181,7 @@ public class VentanaJuego extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setResizable(false);
         addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 formKeyPressed(evt);
@@ -124,9 +218,16 @@ public class VentanaJuego extends javax.swing.JFrame {
 
     private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
        switch (evt.getKeyCode()){
-           case KeyEvent.VK_LEFT: miNave.setPulsadoIzquierda(true) ; break;
-           case KeyEvent.VK_RIGHT: miNave.setPulsadoDerecha(true); break;
-           case KeyEvent.VK_SPACE: miDisparo.posicionaDisparo(miNave); break;
+           case KeyEvent.VK_LEFT:
+               miNave.setPulsadoIzquierda(true);
+               break;
+           case KeyEvent.VK_RIGHT:
+               miNave.setPulsadoDerecha(true); 
+               break;
+           case KeyEvent.VK_SPACE:
+               miDisparo.posicionaDisparo(miNave); 
+               miDisparo.disparado = true; 
+               break;
        }
     }//GEN-LAST:event_formKeyPressed
 
