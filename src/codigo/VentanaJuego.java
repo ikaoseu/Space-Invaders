@@ -5,6 +5,7 @@
  */
 package codigo;
 
+import java.applet.AudioClip;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -29,7 +30,7 @@ public class VentanaJuego extends javax.swing.JFrame {
     static int ALTOPANTALLA = 450;
     
     //numero de marcianos que van a aparecer.
-    int filas = 3;
+    int filas = 5;
     int columnas = 6;
     int contador = 0;
     
@@ -73,6 +74,10 @@ public class VentanaJuego extends javax.swing.JFrame {
                 imagenes[i * 4 + j] = imagenes[i * 4 + j].getScaledInstance(32,32,Image.SCALE_SMOOTH);
             }
         }
+         
+        for(int j=0; j<4; j++){
+            imagenes[20 + j] = plantilla.getSubimage(j * 64,5 * 64, 64, 32);
+        }
         
         
         
@@ -91,8 +96,8 @@ public class VentanaJuego extends javax.swing.JFrame {
           for(int i=0; i<filas; i++){
         for(int j=0; j<columnas; j++){
             listaMarcianos[i][j] = new Marciano();
-            listaMarcianos[i][j].imagen1 = imagenes[2];
-            listaMarcianos[i][j].imagen2 = imagenes[3];
+            listaMarcianos[i][j].imagen1 = imagenes[2*i];
+            listaMarcianos[i][j].imagen2 = imagenes[2*i+1];
             listaMarcianos[i][j].x = j*(15 + listaMarcianos[i][j].imagen1.getWidth(null));
             listaMarcianos[i][j].y = i*(10 + listaMarcianos[i][j].imagen1.getHeight(null));
             
@@ -157,6 +162,38 @@ public class VentanaJuego extends javax.swing.JFrame {
          }
     }
     
+    private void gameOver(){
+        int alto = miNave.imagen.getHeight(null);
+        int ancho = miNave.imagen.getWidth(null);
+        
+        Rectangle2D.Double rectanguloMarciano = new Rectangle2D.Double();
+        Rectangle2D.Double rectanguloNave = new Rectangle2D.Double();
+            
+            rectanguloNave.setFrame(miNave.x,
+                                    miNave.y,
+                                    alto,
+                                    ancho);
+        
+        for(int i=0; i<filas; i++){
+            for(int j=0; j<columnas; j++){
+               if(listaMarcianos[i][j].vivo){  
+                    rectanguloMarciano.setFrame(listaMarcianos[i][j].x, listaMarcianos[i][j].getY(),
+                                                listaMarcianos[i][j].imagen1.getHeight(null),
+                                                listaMarcianos[i][j].imagen1.getWidth(null)
+                                                );
+                    if(rectanguloNave.intersects(rectanguloMarciano)){
+                        //cambiar pantalla por inal del juego.
+                        listaMarcianos[i][j].vivo = false;
+                        miDisparo.posicionaDisparo(miNave);
+                        miDisparo.y = 1000;
+                        miDisparo.disparado = false;
+                    }
+
+                }
+            }
+         }
+    }
+    
     private void cambiaDireccion(){
          for(int i=0; i<filas; i++){
             for(int j=0; j<columnas; j++){
@@ -179,7 +216,8 @@ public class VentanaJuego extends javax.swing.JFrame {
 
                     if(contador < 50){
                         _g2.drawImage(listaMarcianos[i][j].imagen1,
-                                      listaMarcianos[i][j].x, listaMarcianos[i][j].getY(),
+                                      listaMarcianos[i][j].x,
+                                      listaMarcianos[i][j].getY(),
                                       null);
                     }else if (contador < 100){
                         _g2.drawImage(listaMarcianos[i][j].imagen2,
@@ -252,6 +290,9 @@ public class VentanaJuego extends javax.swing.JFrame {
                miNave.setPulsadoDerecha(true); 
                break;
            case KeyEvent.VK_SPACE:
+               AudioClip sonido;
+               sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/laser"));
+               sonido.play();
                miDisparo.posicionaDisparo(miNave); 
                miDisparo.disparado = true; 
                break;
