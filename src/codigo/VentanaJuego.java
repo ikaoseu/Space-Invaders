@@ -30,10 +30,10 @@ public class VentanaJuego extends javax.swing.JFrame {
     static int ALTOPANTALLA = 450;
     
     //numero de marcianos que van a aparecer.
-    int filas = 5;
+    int filas = 4;
     int columnas = 6;
     int contador = 0;
-    
+    int disparoLaser = 1;
     //imagen para cargar la plantilla de murcianos.
     BufferedImage plantilla = null;
     Image [] imagenes = new Image[30];
@@ -62,6 +62,10 @@ public class VentanaJuego extends javax.swing.JFrame {
      */
     public VentanaJuego() {
         initComponents();
+               
+               AudioClip sonido;
+               sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/ambience.wav"));
+               sonido.play();
         try {
             plantilla = ImageIO.read(getClass().getResource("/imagenes/invaders2.png"));
         } catch (IOException ex) {
@@ -109,7 +113,7 @@ public class VentanaJuego extends javax.swing.JFrame {
     private void bucleDelJuego(){
         //se encarga del redibujado de los objetos en el jPanel1
         //primero borro todo lo que hay en el buffer
-        contador++;
+        contador++;   
         Graphics2D g2 = (Graphics2D) buffer.getGraphics();
         g2.setColor(Color.BLACK);
         g2.fillRect(0, 0, ANCHOPANTALLA, ALTOPANTALLA);
@@ -120,6 +124,7 @@ public class VentanaJuego extends javax.swing.JFrame {
         g2.drawImage(miNave.imagen, miNave.x, miNave.y, null);
         
         pintaMarcianos(g2);
+        gameOver();
         chequeaImpacto();
         miNave.mueve();
         miDisparo.mueve();
@@ -151,6 +156,9 @@ public class VentanaJuego extends javax.swing.JFrame {
                                                 listaMarcianos[i][j].imagen1.getWidth(null)
                                                 );
                     if(rectanguloDisparo.intersects(rectanguloMarciano)){
+                         AudioClip sonido;
+                         sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/bicho1.wav"));
+                         sonido.play();
                         listaMarcianos[i][j].vivo = false;
                         miDisparo.posicionaDisparo(miNave);
                         miDisparo.y = 1000;
@@ -244,6 +252,7 @@ public class VentanaJuego extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -256,15 +265,26 @@ public class VentanaJuego extends javax.swing.JFrame {
             }
         });
 
+        jPanel1.setForeground(new java.awt.Color(255, 255, 255));
+
+        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagenes/fondoInv.jpg"))); // NOI18N
+        jLabel1.setText("jLabel1");
+        jLabel1.setOpaque(true);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 600, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 600, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 99, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 450, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(jLabel1)
+                .addGap(0, 284, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -290,9 +310,31 @@ public class VentanaJuego extends javax.swing.JFrame {
                miNave.setPulsadoDerecha(true); 
                break;
            case KeyEvent.VK_SPACE:
-               AudioClip sonido;
-               sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/laser"));
-               sonido.play();
+               if(disparoLaser == 1){
+                   AudioClip sonido;
+                   sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/lasrhit1.wav"));
+                   sonido.play();
+                   disparoLaser = 2;
+               }else{
+                   if(disparoLaser == 2){
+                       AudioClip sonido;
+                       sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/lasrhit2.wav"));
+                       sonido.play();
+                       disparoLaser = 3;
+                   }else{
+                       if(disparoLaser == 3){
+                           AudioClip sonido;
+                           sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/lasrhit3.wav"));
+                           sonido.play();
+                           disparoLaser = 4;
+                       }else{
+                             AudioClip sonido;
+                             sonido = java.applet.Applet.newAudioClip(getClass().getResource("/sonidos/lasrhit4.wav"));
+                             sonido.play();
+                             disparoLaser = 1;
+                       }
+                   }
+               }
                miDisparo.posicionaDisparo(miNave); 
                miDisparo.disparado = true; 
                break;
@@ -342,6 +384,7 @@ public class VentanaJuego extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
 }
